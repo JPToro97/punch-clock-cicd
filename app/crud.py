@@ -1,36 +1,35 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
-from fastapi import HTTPException, status
-from . import models, schemas
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
 
-def register_punch(db: Session, punch: schemas.PunchCreate):
-    # 1. Verify if the employee exists by their badge number
-    employee = db.query(models.Employee).filter(models.Employee.badge_number == punch.badge_number).first()
-    if not employee:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Employee badge number not recognized."
-        )
+client = TestClient(app)
 
-    # 2. Query the last punch registration for this specific employee
-    last_log = db.query(models.PunchLog)\
-                 .filter(models.PunchLog.employee_id == employee.id)\
-                 .order_by(desc(models.PunchLog.timestamp))\
-                 .first()
-
-    # 3. State Validation Logic: Check against duplicate consecutive states
-    if last_log and last_log.status == punch.status:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid action. Your last registered status is already '{punch.status}'."
-        )
-
-    # 4. Save the new valid punch log to the database
-    new_log = models.PunchLog(
-        employee_id=employee.id,
-        status=punch.status
+def test_punch_in_success():
+    """Verify that a valid check-in request is processed successfully."""
+    response = client.post(
+        "/punch",
+        json={"badge_number": "12345", "status": "check-in"}
     )
-    db.add(new_log)
-    db.commit()
-    db.refresh(new_log)
-    return new_log
+    assert response.status_code == 200
+    assert response.json()["status"] == "check-in"
+
+def test_duplicate_punch_fail():
+    """Verify that the system prevents consecutive identical punch actions."""
+    # First request (successful)
+    client.post("/punch", json={"badge_number": "12345", "status": "check-in"})
+    
+    # Second request (must return 400 Bad Request)
+    response = client.post(
+        "/punch",
+        json={"badge_number": "12345", "status": "check-in"}
+    )
+    assert response.status_code == 400
+    assert "Invalid action" in response.json()["detail"]
+
+def test_invalid_badge():
+    """Verify that an unknown badge number returns a 404 error."""
+    response = client.post(
+        "/punch",
+        json={"badge_number": "99999", "status": "check-in"}
+    )
+    assert response.status_code == 404
