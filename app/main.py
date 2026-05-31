@@ -40,3 +40,25 @@ def get_employee_logs(badge_number: str, db: Session = Depends(get_db)):
     if not employee:
         return {"error": "Employee not found"}
     return {"employee": employee.name, "history": employee.logs}
+
+@app.get("/employees", response_model=list[schemas.EmployeeResponse])
+def read_employees(db: Session = Depends(get_db)):
+    return crud.get_employees(db)
+
+@app.post("/employees", response_model=schemas.EmployeeResponse)
+def add_employee(employee: schemas.EmployeeCreate, db: Session = Depends(get_db)):
+    return crud.create_employee(db, employee)
+
+@app.delete("/employees/{employee_id}")
+def remove_employee(employee_id: int, db: Session = Depends(get_db)):
+    success = crud.delete_employee(db, employee_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return {"message": "Employee deleted"}
+
+@app.get("/history/{badge_number}")
+def get_history(badge_number: str, db: Session = Depends(get_db)):
+    history = crud.get_employee_history(db, badge_number)
+    if not history:
+        raise HTTPException(status_code=404, detail="No history found")
+    return history

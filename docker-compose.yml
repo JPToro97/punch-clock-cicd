@@ -28,6 +28,8 @@ services:
       - DATABASE_URL=postgresql://admin:supersecretpassword@db:5432/punch_clock
     depends_on:
       - db
+    volumes:
+      - .:/app
     networks:
       - app-network
 
