@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Literal
 
 class PunchCreate(BaseModel):
-    badge_number: str
+    employee_id: str
     status: Literal["check-in", "break", "check-out"]
 
 class PunchLogResponse(BaseModel):

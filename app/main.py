@@ -2,24 +2,33 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from .database import engine, Base, get_db
 from . import models, schemas, crud
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
-# Automatically construct database tables inside PostgreSQL if they don't exist yet
+# Ensure database tables exist
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Punch-Clock System V1")
 
-# Seed basic data so the database isn't empty when testing
-@app.on_event("startup")
-def seed_database():
-    db = next(get_db())
-    if not db.query(models.Employee).first():
-        demo_worker = models.Employee(name="Juan Toro", badge_number="12345")
-        db.add(demo_worker)
-        db.commit()
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this to your frontend's origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/")
-def home():
-    return {"message": "Punch-Clock API is running natively within Docker Compose!"}
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.post("/punch", response_model=schemas.PunchLogResponse)
+def punch_in_out(punch: schemas.PunchCreate, db: Session = Depends(get_db)):
+    return crud.register_punch(db=db, punch=punch)
+
+@app.get("/", include_in_schema=False)
+def redirect_to_dashboard():
+    return RedirectResponse(url="/static/index.html")
 
 @app.post("/punch", response_model=schemas.PunchLogResponse)
 def punch_in_out(punch: schemas.PunchCreate, db: Session = Depends(get_db)):
