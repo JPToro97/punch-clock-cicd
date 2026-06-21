@@ -6,8 +6,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-# Ensure database tables exist
-Base.metadata.create_all(bind=engine)
+import os
+
+# Cambia la línea directa por este condicional:
+if os.getenv("TESTING") != "True":
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Punch-Clock System V1")
 

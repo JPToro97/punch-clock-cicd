@@ -29,5 +29,6 @@ jobs:
       - name: Ejecutar pruebas unitarias con Pytest
         env:
           PYTHONPATH: .
+          TESTING: "True"  
         run: |
           python -m pytest tests/
