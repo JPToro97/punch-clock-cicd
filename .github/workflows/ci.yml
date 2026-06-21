@@ -27,5 +27,7 @@ jobs:
           pip install pytest httpx  # Aseguramos herramientas necesarias para las pruebas
 
       - name: Ejecutar pruebas unitarias con Pytest
+        env:
+          PYTHONPATH: .
         run: |
-          pytest tests/
+          python -m pytest tests/
