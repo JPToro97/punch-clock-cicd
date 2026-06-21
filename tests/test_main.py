@@ -41,7 +41,7 @@ client = TestClient(app)
 def test_read_employees_empty():
     """Prueba que inicialmente la lista de empleados esté vacía"""
     response = client.get("/employees")
-    assert response.status_code == 500
+    assert response.status_code == 200
     assert response.json() == []
 
 def test_create_employee():
