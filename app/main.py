@@ -8,7 +8,6 @@ from fastapi.responses import RedirectResponse
 
 import os
 
-# Cambia la línea directa por este condicional:
 if os.getenv("TESTING") != "True":
     Base.metadata.create_all(bind=engine)
 
@@ -17,7 +16,7 @@ app = FastAPI(title="Punch-Clock System V1")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this to your frontend's origin
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
